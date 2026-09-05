@@ -1,16 +1,27 @@
 'use strict';
+// v3 - diagnostic
 const express = require('express');
 const { Pool } = require('pg');
 const path = require('path');
 
+process.on('uncaughtException', err => {
+  console.error('UNCAUGHT EXCEPTION:', err.message, err.stack);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('UNHANDLED REJECTION:', reason);
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0';
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ─── Arrancar servidor PRIMERO (Railway health check) ─────────────────────────
-app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+// ─── Arrancar servidor PRIMERO ────────────────────────────────────────────────
+app.listen(PORT, HOST, () => {
+  console.log(`Servidor en ${HOST}:${PORT}`);
+});
 
 // ─── DB Setup ────────────────────────────────────────────────────────────────
 const pool = new Pool({
@@ -20,6 +31,7 @@ const pool = new Pool({
 });
 
 async function initDB() {
+  console.log('Conectando a DB...');
   const client = await pool.connect();
   try {
     await client.query(`
@@ -41,17 +53,13 @@ async function initDB() {
 
 initDB().catch(err => console.error('DB Error:', err.message));
 
-// ─── API: Mesas ───────────────────────────────────────────────────────────────
 app.get('/api/mesas', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT id, data FROM mesas ORDER BY id');
     const result = {};
     rows.forEach(r => { result[r.id] = r.data; });
     res.json(result);
-  } catch (e) {
-    console.error('GET /api/mesas:', e.message);
-    res.json({});
-  }
+  } catch (e) { console.error('GET /api/mesas:', e.message); res.json({}); }
 });
 
 app.post('/api/mesas', async (req, res) => {
@@ -65,10 +73,7 @@ app.post('/api/mesas', async (req, res) => {
       [id, mesa]
     );
     res.json({ ok: true, id });
-  } catch (e) {
-    console.error('POST /api/mesas:', e.message);
-    res.status(500).json({ error: e.message });
-  }
+  } catch (e) { console.error('POST /api/mesas:', e.message); res.status(500).json({ error: e.message }); }
 });
 
 app.delete('/api/mesas', async (req, res) => {
@@ -78,12 +83,9 @@ app.delete('/api/mesas', async (req, res) => {
   try {
     await pool.query('DELETE FROM mesas');
     res.json({ ok: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ─── API: Config ──────────────────────────────────────────────────────────────
 app.get('/api/config/parties', async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT value FROM config WHERE key='parties'");
@@ -118,10 +120,8 @@ app.post('/api/config/settings', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ─── Health ───────────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => res.json({ ok: true }));
+app.get('/health', (req, res) => res.json({ ok: true, port: PORT }));
 
-// ─── SPA fallback ────────────────────────────────────────────────────────────
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
