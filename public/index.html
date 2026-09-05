@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#1c3d7e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Escrutinio">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+<title>Escrutinio Pte. Perón 2027</title>
+<style>
+:root {
+  --bg:#eef2f8;--surface:#fff;--surface2:#f4f7fb;--border:#d8e0ef;
+  --text:#0f1729;--text2:#5c6b88;--blue:#1c3d7e;--blue2:#2a55b0;
+  --blue-bg:#e8eef8;--accent:#c9940d;--accent-bg:#fef3d8;
+  --green:#166534;--green-bg:#dcfce7;--red:#991b1b;--red-bg:#fee2e2;
+  --radius:12px;--tab-active:#d4a017;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1526;--surface:#162035;--surface2:#0f1a2e;--border:#243553;
+  --text:#dde5f4;--text2:#7d93b8;--blue:#5580d0;--blue2:#7aa0e8;
+  --blue-bg:#162035;--accent:#f0b823;--accent-bg:#2a1f00;
+  --green:#22c55e;--green-bg:#052e16;--red:#f87171;--red-bg:#2d0a0a;
+}}
+:root[data-theme="dark"]{
+  --bg:#0c1526;--surface:#162035;--surface2:#0f1a2e;--border:#243553;
+  --text:#dde5f4;--text2:#7d93b8;--blue:#5580d0;--blue2:#7aa0e8;
+  --blue-bg:#162035;--accent:#f0b823;--accent-bg:#2a1f00;
+  --green:#22c55e;--green-bg:#052e16;--red:#f87171;--red-bg:#2d0a0a;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+
+.hdr{background:linear-gradient(135deg,#122760,#1c3d7e);color:#fff;padding:14px 18px 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.hdr-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.hdr-icon{font-size:26px;line-height:1}
+.hdr h1{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:1px;line-height:1.1}
+.hdr .sub{font-size:11px;opacity:.7}
+.online-badge{margin-left:auto;font-size:11px;display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 2px rgba(74,222,128,.3);animation:pulse 2s infinite}
+.dot.off{background:#f87171;box-shadow:0 0 0 2px rgba(248,113,113,.3);animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.tabs{display:flex;background:rgba(0,0,0,.25);border-top:1px solid rgba(255,255,255,.1)}
+.tab{flex:1;padding:9px 2px 8px;border:none;background:none;color:rgba(255,255,255,.55);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;border-bottom:2px solid transparent}
+.tab.active{color:#fff;border-bottom-color:var(--tab-active)}
+.tab-icon{font-size:16px}
+
+.page{display:none;padding:14px;max-width:620px;margin:0 auto 80px}
+.page.active{display:block}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--blue);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.frow.three{grid-template-columns:1fr 1fr 1fr}
+.frow.one{grid-template-columns:1fr}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+.field input,.field select{padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;width:100%}
+.field input:focus,.field select:focus{outline:none;border-color:var(--blue2);box-shadow:0 0 0 3px rgba(44,85,176,.15)}
+.field input[type=number]{font-family:'DM Mono',monospace}
+
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px}
+.vote-table{width:100%;border-collapse:collapse;font-size:13px;min-width:280px}
+.vote-table thead th{padding:8px 5px;background:var(--blue-bg);color:var(--blue);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--border);white-space:nowrap}
+.vote-table thead th:first-child{text-align:left;padding-left:2px;min-width:130px}
+.vote-table thead th:not(:first-child){text-align:center;width:72px}
+.vote-table td{padding:5px 4px;border-bottom:1px solid var(--border);vertical-align:middle}
+.vote-table td:first-child{font-size:12px;font-weight:500;color:var(--text);line-height:1.3;padding-right:8px}
+.vote-table tr:hover td{background:var(--surface2)}
+.vote-table tr.subtotal td{background:var(--surface2);font-weight:700;border-top:1.5px solid var(--border);border-bottom:1.5px solid var(--border);font-family:'DM Mono',monospace}
+.vote-table tr.gran-total td{background:var(--blue-bg);font-weight:700;font-family:'DM Mono',monospace;color:var(--blue)}
+
+.v-input{width:64px!important;padding:6px 3px!important;text-align:center;font-family:'DM Mono',monospace!important;font-size:16px!important;border-radius:6px!important;border:1.5px solid var(--border)!important;background:var(--surface2)!important;color:var(--text)!important;display:block;margin:0 auto}
+.v-input:focus{border-color:var(--blue2)!important;box-shadow:0 0 0 2px rgba(44,85,176,.15);outline:none}
+.no-usar{display:block;width:64px;text-align:center;margin:0 auto;font-size:10px;color:var(--text2);font-style:italic}
+
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 10px;text-align:center}
+.stat .n{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:var(--blue);line-height:1}
+.stat .l{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+
+.prog-wrap{background:var(--surface2);border-radius:99px;height:6px;overflow:hidden;margin:6px 0}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue2));border-radius:99px;transition:width .5s}
+
+.res-table{width:100%;border-collapse:collapse;font-size:13px}
+.res-table thead th{padding:7px 8px;background:var(--blue-bg);color:var(--blue);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--border)}
+.res-table thead th:first-child{text-align:left}
+.res-table thead th:not(:first-child){text-align:right}
+.res-table td{padding:7px 8px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;vertical-align:middle}
+.res-table td:first-child{font-size:12px;font-weight:500}
+.res-table td:not(:first-child){text-align:right;font-family:'DM Mono',monospace}
+.res-table .pct{font-size:11px;color:var(--text2)}
+.res-table tr:hover td{background:var(--surface2)}
+.res-table tr.winner td:first-child{color:var(--blue);font-weight:700}
+.res-table tr.footer-row td{font-weight:700;background:var(--surface2);border-top:1.5px solid var(--border)}
+
+.mesa-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;cursor:pointer}
+.mesa-card:hover{border-color:var(--blue2)}
+.mesa-num{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--blue);line-height:1}
+.mesa-info{font-size:12px;color:var(--text2);margin-top:2px}
+.mesa-meta{text-align:right}
+.mesa-total{font-family:'DM Mono',monospace;font-size:18px;font-weight:600}
+.mesa-fiscal{font-size:11px;color:var(--text2);margin-top:2px}
+
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:10px;display:flex;gap:8px;align-items:flex-start}
+.alert.error{background:var(--red-bg);color:var(--red)}
+.alert.ok{background:var(--green-bg);color:var(--green)}
+.alert.warn{background:var(--accent-bg);color:var(--accent)}
+.alert-icon{flex-shrink:0;font-size:15px;margin-top:1px}
+
+.btn{display:block;width:100%;padding:14px 18px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;text-align:center;transition:opacity .15s}
+.btn:active{opacity:.8}
+.btn.sm{padding:8px 14px;font-size:13px;border-radius:8px;width:auto}
+.btn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn.danger{background:var(--red)}
+.btn.accent{background:var(--accent);color:#fff}
+.btn-row{display:flex;gap:8px;margin-top:12px}
+
+.party-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.party-row input[type=text]{flex:1;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:13px}
+.party-row .chk-wrap{display:flex;gap:12px;flex-shrink:0}
+.chk-wrap label{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);white-space:nowrap;cursor:pointer}
+.chk-wrap input{width:14px;height:14px}
+.del-btn{background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;padding:4px;flex-shrink:0}
+
+.val-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.val-badge.ok{background:var(--green-bg);color:var(--green)}
+.val-badge.err{background:var(--red-bg);color:var(--red)}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--text2)}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:var(--blue-bg);color:var(--blue)}
+
+.pending-badge{background:var(--accent-bg);color:var(--accent);display:none;padding:4px 10px;border-radius:6px;font-size:12px;margin-bottom:8px;text-align:center}
+.pending-badge.show{display:block}
+
+#install-btn{display:none;width:100%;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="hdr-icon">🗳️</div>
+    <div>
+      <h1>Escrutinio 2027</h1>
+      <div class="sub">Distrito 128 — Municipio Presidente Perón</div>
+    </div>
+    <div class="online-badge">
+      <span class="dot" id="conn-dot"></span>
+      <span id="conn-txt">EN VIVO</span>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showPage('cargar')" id="tab-cargar"><span class="tab-icon">📝</span>Cargar</button>
+    <button class="tab" onclick="showPage('resultados')" id="tab-resultados"><span class="tab-icon">📊</span>Resultados</button>
+    <button class="tab" onclick="showPage('mesas')" id="tab-mesas"><span class="tab-icon">📋</span>Mesas</button>
+    <button class="tab" onclick="showPage('admin')" id="tab-admin"><span class="tab-icon">⚙️</span>Admin</button>
+  </div>
+</div>
+
+<!-- CARGAR -->
+<div class="page active" id="page-cargar">
+  <button class="btn accent" id="install-btn" onclick="installPWA()">📲 Instalar app en este celular</button>
+  <div id="form-alert"></div>
+  <div class="pending-badge" id="pending-badge">⏳ <span id="pending-count">0</span> actas pendientes de sincronizar</div>
+
+  <div class="card">
+    <div class="card-title">Datos de la Mesa</div>
+    <div class="frow three">
+      <div class="field"><label>N° Mesa</label><input type="number" id="f-mesa" placeholder="0186" min="1"></div>
+      <div class="field"><label>Circuito</label><input type="text" id="f-circuito" placeholder="0304B"></div>
+      <div class="field"><label>Fiscal</label><input type="text" id="f-fiscal" placeholder="Apellido"></div>
+    </div>
+    <div class="frow one">
+      <div class="field">
+        <label>Escuela / Establecimiento</label>
+        <select id="f-escuela" onchange="onEscuelaChange()" style="font-size:13px">
+          <option value="">— Seleccionar escuela —</option>
+          <optgroup label="Circuito 304">
+            <option value="ESCUELA EP N°2/ES N°11|304|1|8">ESCUELA EP N°2/ES N°11 (Mesas 1–8)</option>
+            <option value="JARDIN DE INFANTES N°912|304|9|10">JARDIN DE INFANTES N°912 (Mesas 9–10)</option>
+            <option value="ESCUELA EP N°7|304|11|18">ESCUELA EP N°7 (Mesas 11–18)</option>
+            <option value="JARDIN DE INFANTES N°915|304|19|20">JARDIN DE INFANTES N°915 (Mesas 19–20)</option>
+            <option value="ESCUELA ES N°2|304|21|29">ESCUELA ES N°2 (Mesas 21–29)</option>
+            <option value="JARDIN DE INFANTES N°910|304|30|33">JARDIN DE INFANTES N°910 (Mesas 30–33)</option>
+            <option value="JARDIN DE INFANTES N°903|304|34|36">JARDIN DE INFANTES N°903 (Mesas 34–36)</option>
+            <option value="ESCUELA EP N°8|304|37|44">ESCUELA EP N°8 (Mesas 37–44)</option>
+            <option value="ESCUELA ES N°5|304|45|50">ESCUELA ES N°5 (Mesas 45–50)</option>
+            <option value="ESC. EDUC. ESPECIAL N°502|304|51|57">ESC. EDUC. ESPECIAL N°502 (Mesas 51–57)</option>
+            <option value="JARDIN DE INFANTES N°913|304|58|60">JARDIN DE INFANTES N°913 (Mesas 58–60)</option>
+          </optgroup>
+          <optgroup label="Circuito 0304A">
+            <option value="ESCUELA EP N°3|0304A|61|68">ESCUELA EP N°3 (Mesas 61–68)</option>
+            <option value="ESC. EDUC. ESPECIAL N°501|0304A|69|73">ESC. EDUC. ESPECIAL N°501 (Mesas 69–73)</option>
+            <option value="ESCUELA ES N°8|0304A|74|80">ESCUELA ES N°8 (Mesas 74–80)</option>
+            <option value="ESCUELA EP N°13|0304A|81|87">ESCUELA EP N°13 (Mesas 81–87)</option>
+            <option value="ESCUELA EP N°11|0304A|88|95">ESCUELA EP N°11 (Mesas 88–95)</option>
+            <option value="ESC. GABRIELA MISTRAL|0304A|96|103">ESC. GABRIELA MISTRAL (Mesas 96–103)</option>
+            <option value="ESCUELA EP N°1|0304A|104|111">ESCUELA EP N°1 (Mesas 104–111)</option>
+            <option value="ESCUELA EST N°1|0304A|112|118">ESCUELA EST N°1 (Mesas 112–118)</option>
+            <option value="ESCUELA ES N°1|0304A|119|126">ESCUELA ES N°1 (Mesas 119–126)</option>
+            <option value="COLEGIO MARTHA SALLOTTI|0304A|127|133">COLEGIO MARTHA SALLOTTI (Mesas 127–133)</option>
+            <option value="ESCUELA ES N°3|0304A|134|139">ESCUELA ES N°3 (Mesas 134–139)</option>
+            <option value="ESCUELA ES N°7|0304A|140|144">ESCUELA ES N°7 (Mesas 140–144)</option>
+            <option value="ESCUELA EP N°5|0304A|145|152">ESCUELA EP N°5 (Mesas 145–152)</option>
+          </optgroup>
+          <optgroup label="Circuito 0304B">
+            <option value="ESCUELA EP N°6/ES N°9|0304B|153|161">ESCUELA EP N°6/ES N°9 (Mesas 153–161)</option>
+            <option value="JARDIN DE INFANTES N°914|0304B|162|165">JARDIN DE INFANTES N°914 (Mesas 162–165)</option>
+            <option value="JARDIN DE INFANTES N°917|0304B|166|167">JARDIN DE INFANTES N°917 (Mesas 166–167)</option>
+            <option value="ESCUELA ES N°2 ANEXO 1|0304B|168|171">ESCUELA ES N°2 ANEXO 1 (Mesas 168–171)</option>
+            <option value="ESCUELA EP N°10|0304B|172|181">ESCUELA EP N°10 (Mesas 172–181)</option>
+            <option value="JARDIN DE INFANTES N°907|0304B|182|186">JARDIN DE INFANTES N°907 (Mesas 182–186)</option>
+            <option value="ESCUELA EP N°9|0304B|187|192">ESCUELA EP N°9 (Mesas 187–192)</option>
+            <option value="ESCUELA ES N°10|0304B|193|196">ESCUELA ES N°10 (Mesas 193–196)</option>
+            <option value="JARDIN DE INFANTES N°905|0304B|197|200">JARDIN DE INFANTES N°905 (Mesas 197–200)</option>
+            <option value="JARDIN DE INFANTES N°918|0304B|201|204">JARDIN DE INFANTES N°918 (Mesas 201–204)</option>
+            <option value="ESCUELA ES N°6|0304B|205|211">ESCUELA ES N°6 (Mesas 205–211)</option>
+          </optgroup>
+          <optgroup label="Circuito 0304C">
+            <option value="ESCUELA EP N°12|0304C|212|217">ESCUELA EP N°12 (Mesas 212–217)</option>
+          </optgroup>
+          <optgroup label="Extranjeros (0304A)">
+            <option value="INST. ROSARIO VERA PEÑALOZA|0304A|9001|9007">INST. ROSARIO VERA PEÑALOZA (9001–9007)</option>
+            <option value="ESCUELA EP N°14|0304A|9008|9012">ESCUELA EP N°14 (9008–9012)</option>
+            <option value="ESC. INTEGRAL QUINQUELA MARTIN|0304A|9013|9022">ESC. INTEGRAL QUINQUELA MARTIN (9013–9022)</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Datos de la Urna <span id="val-badge-wrap"></span></div>
+    <div class="frow three">
+      <div class="field"><label>A — Votaron</label><input type="number" id="f-votaron" placeholder="210" min="0" max="999" oninput="validateTotals()"></div>
+      <div class="field"><label>B — Sobres</label><input type="number" id="f-sobres" placeholder="210" min="0" max="999" oninput="validateTotals()"></div>
+      <div class="field"><label>C — Diferencia</label><input type="number" id="f-diferencia" placeholder="0" readonly style="background:var(--surface2);color:var(--text2)"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Votos por Agrupación Política</div>
+    <div class="table-wrap">
+      <table class="vote-table">
+        <thead><tr><th>Partido</th><th>DIP/SEN</th><th>CONC/CE</th></tr></thead>
+        <tbody id="vote-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Votos Especiales</div>
+    <div class="frow">
+      <div class="field"><label>D — Blanco (Dip)</label><input type="number" class="v-input" id="f-blanco-dip" placeholder="0" min="0" oninput="recalcTotals()"></div>
+      <div class="field"><label>D — Blanco (Conc)</label><input type="number" class="v-input" id="f-blanco-con" placeholder="0" min="0" oninput="recalcTotals()"></div>
+    </div>
+    <div class="frow">
+      <div class="field"><label>E — Impugnados (Dip)</label><input type="number" class="v-input" id="f-imp-dip" placeholder="0" min="0" oninput="recalcTotals()"></div>
+      <div class="field"><label>E — Impugnados (Conc)</label><input type="number" class="v-input" id="f-imp-con" placeholder="0" min="0" oninput="recalcTotals()"></div>
+    </div>
+  </div>
+
+  <button class="btn" onclick="submitMesa()">Guardar Acta ✓</button>
+  <div style="height:8px"></div>
+  <button class="btn ghost" onclick="clearForm()">Limpiar formulario</button>
+</div>
+
+<!-- RESULTADOS -->
+<div class="page" id="page-resultados">
+  <div class="stats">
+    <div class="stat"><div class="n" id="r-mesas">0</div><div class="l">Mesas</div></div>
+    <div class="stat"><div class="n" id="r-votantes">0</div><div class="l">Votantes</div></div>
+    <div class="stat"><div class="n" id="r-pct">—</div><div class="l">Cobertura</div></div>
+  </div>
+  <div class="card" id="res-prog-card" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:12px;color:var(--text2)">Mesas procesadas</span>
+      <span class="badge" id="res-mesa-count">0 / ?</span>
+    </div>
+    <div class="prog-wrap"><div class="prog-bar" id="res-prog-bar" style="width:0%"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Diputados / Senadores Provinciales</div>
+    <div class="table-wrap"><table class="res-table" id="res-dip-table"><thead><tr><th>Partido</th><th>Votos</th><th>%</th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Concejales y Consejeros Escolares</div>
+    <div class="table-wrap"><table class="res-table" id="res-con-table"><thead><tr><th>Partido</th><th>Votos</th><th>%</th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div style="text-align:center;font-size:11px;color:var(--text2);margin-top:8px">Actualiza automáticamente cada 20 seg.</div>
+</div>
+
+<!-- MESAS -->
+<div class="page" id="page-mesas">
+  <div id="mesas-list"></div>
+</div>
+
+<!-- ADMIN -->
+<div class="page" id="page-admin">
+  <div class="card">
+    <div class="card-title">Lista de Partidos <button class="btn sm" onclick="addParty()">+ Agregar</button></div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:10px">Dip = Diputados/Senadores &nbsp;|&nbsp; Con = Concejales/CE</div>
+    <div id="party-list"></div>
+    <div class="btn-row"><button class="btn accent" onclick="saveParties()">Guardar lista de partidos</button></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Configuración</div>
+    <div class="frow one">
+      <div class="field"><label>Total de mesas del municipio</label><input type="number" id="cfg-total-mesas" placeholder="ej: 217" min="1"></div>
+    </div>
+    <button class="btn sm" onclick="saveCfg()">Guardar</button>
+  </div>
+  <div class="card">
+    <div class="card-title" style="color:var(--red)">Zona peligrosa</div>
+    <div class="field" style="margin-bottom:10px">
+      <label>Contraseña admin</label>
+      <input type="password" id="admin-secret" placeholder="peron2027">
+    </div>
+    <button class="btn danger" onclick="resetAll()">Borrar todos los datos</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════
+// CONFIGURACIÓN
+// ═══════════════════════════════
+let PARTIDOS = [
+  {id:'2200',nombre:'2200 - FUERZA PATRIA',          dip:true, con:true},
+  {id:'2201',nombre:'2201 - POTENCIA',               dip:true, con:true},
+  {id:'2202',nombre:'2202 - ES CON VOS ES CON NOS.', dip:true, con:true},
+  {id:'2203',nombre:'2203 - FTE IZQ. Y TRABAJADORES',dip:true, con:true},
+  {id:'2204',nombre:'2204 - SOMOS BUENOS AIRES',     dip:true, con:true},
+  {id:'2205',nombre:'2205 - NUEVOS AIRES',           dip:true, con:true},
+  {id:'2206',nombre:'2206 - LA LIBERTAD AVANZA',     dip:true, con:true},
+  {id:'2207',nombre:'2207 - UNION Y LIBERTAD',       dip:true, con:true},
+  {id:'2208',nombre:'2208 - UNION LIBERAL',          dip:true, con:false},
+  {id:'959', nombre:'959 - MOV. AVANZADA SOCIALISTA',dip:true, con:false},
+  {id:'963', nombre:'963 - FRENTE PATRIOTA FEDERAL', dip:true, con:false},
+  {id:'974', nombre:'974 - POLITICA OBRERA',         dip:true, con:true},
+  {id:'980', nombre:'980 - PARTIDO TIEMPO DE TODOS', dip:true, con:true},
+  {id:'1003',nombre:'1003 - CONSTRUYENDO PORVENIR',  dip:true, con:true},
+  {id:'1006',nombre:'1006 - PARTIDO LIBERTARIO',     dip:true, con:false},
+  {id:'1008',nombre:'1008 - VALORES REPUBLICANOS',   dip:true, con:true},
+  {id:'985', nombre:'985 - HACEMOS GUERNICA HA-GA',  dip:false,con:true},
+];
+
+let mesasCache = {};
+let totalMesas = 0;
+let pendingQueue = JSON.parse(localStorage.getItem('_pending_mesas') || '[]');
+let installPrompt = null;
+
+// ── PWA install ──────────────────────────────────────────
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); installPrompt = e;
+  document.getElementById('install-btn').style.display = 'block';
+});
+function installPWA() {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  installPrompt.userChoice.then(() => { installPrompt = null; document.getElementById('install-btn').style.display='none'; });
+}
+
+// ── Service Worker ───────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    navigator.serviceWorker.addEventListener('message', e => {
+      if (e.data.type === 'SYNC_NOW') flushQueue();
+    });
+  });
+}
+
+// ── Conectividad ─────────────────────────────────────────
+function updateOnlineStatus() {
+  const dot = document.getElementById('conn-dot');
+  const txt = document.getElementById('conn-txt');
+  if (navigator.onLine) {
+    dot.className = 'dot'; txt.textContent = 'EN VIVO';
+    flushQueue();
+  } else {
+    dot.className = 'dot off'; txt.textContent = 'SIN RED';
+  }
+}
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// ── API calls ─────────────────────────────────────────────
+async function apiGet(path) {
+  const res = await fetch(path); if (!res.ok) throw new Error(res.status); return res.json();
+}
+async function apiPost(path, data) {
+  const res = await fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+  if (!res.ok) throw new Error(res.status); return res.json();
+}
+async function apiDel(path) {
+  const res = await fetch(path, { method:'DELETE' });
+  if (!res.ok) throw new Error(res.status); return res.json();
+}
+
+// ── Cola offline ──────────────────────────────────────────
+function savePendingQueue() { localStorage.setItem('_pending_mesas', JSON.stringify(pendingQueue)); }
+function updatePendingBadge() {
+  const badge = document.getElementById('pending-badge');
+  const count = document.getElementById('pending-count');
+  if (pendingQueue.length > 0) { badge.className='pending-badge show'; count.textContent=pendingQueue.length; }
+  else { badge.className='pending-badge'; }
+}
+
+async function flushQueue() {
+  if (pendingQueue.length === 0 || !navigator.onLine) return;
+  const toSend = [...pendingQueue];
+  pendingQueue = [];
+  savePendingQueue();
+  for (const item of toSend) {
+    try { await apiPost(`/api/mesas/${item.id}`, item.data); }
+    catch(e) { pendingQueue.push(item); savePendingQueue(); }
+  }
+  updatePendingBadge();
+  await loadMesas();
+}
+
+// ── Cargar datos ──────────────────────────────────────────
+async function loadMesas() {
+  try {
+    const data = await apiGet('/api/mesas');
+    mesasCache = data || {};
+    localStorage.setItem('_local_mesas', JSON.stringify(mesasCache));
+    renderResults(); renderMesas();
+  } catch(e) {
+    // offline: usar cache local
+    try { mesasCache = JSON.parse(localStorage.getItem('_local_mesas') || '{}'); } catch(x){}
+    renderResults(); renderMesas();
+  }
+}
+
+async function loadConfig() {
+  try {
+    const cfg = await apiGet('/api/config');
+    if (cfg.parties) { PARTIDOS = cfg.parties; buildVoteTable(); buildAdminList(); }
+    if (cfg.settings?.totalMesas) { totalMesas = cfg.settings.totalMesas; document.getElementById('cfg-total-mesas').value = totalMesas; }
+  } catch(e){}
+}
+
+// ── Init ──────────────────────────────────────────────────
+async function init() {
+  buildVoteTable();
+  buildAdminList();
+  loadLocalForm();
+  updatePendingBadge();
+  await loadConfig();
+  await loadMesas();
+  // Poll cada 20 segundos
+  setInterval(loadMesas, 20000);
+}
+
+// ── Vote table ────────────────────────────────────────────
+function buildVoteTable() {
+  const tbody = document.getElementById('vote-tbody');
+  tbody.innerHTML = '';
+  PARTIDOS.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${p.nombre}</td>
+      <td>${p.dip?`<input class="v-input" type="number" id="v-${p.id}-dip" min="0" max="999" placeholder="0" oninput="recalcTotals()">`:' <span class="no-usar">—</span>'}</td>
+      <td>${p.con?`<input class="v-input" type="number" id="v-${p.id}-con" min="0" max="999" placeholder="0" oninput="recalcTotals()">`:' <span class="no-usar">—</span>'}</td>`;
+    tbody.appendChild(tr);
+  });
+  const sub = document.createElement('tr'); sub.className='subtotal';
+  sub.innerHTML='<td>TOTAL AGRUPACIONES</td><td id="sub-dip" style="text-align:center">0</td><td id="sub-con" style="text-align:center">0</td>';
+  tbody.appendChild(sub);
+  const gt = document.createElement('tr'); gt.className='gran-total';
+  gt.innerHTML='<td>SUMA TOTAL VOTOS</td><td id="gran-dip" style="text-align:center">0</td><td id="gran-con" style="text-align:center">0</td>';
+  tbody.appendChild(gt);
+}
+
+function recalcTotals() {
+  let sD=0,sC=0;
+  PARTIDOS.forEach(p => {
+    if(p.dip) sD+=parseInt(document.getElementById(`v-${p.id}-dip`)?.value||0);
+    if(p.con) sC+=parseInt(document.getElementById(`v-${p.id}-con`)?.value||0);
+  });
+  document.getElementById('sub-dip').textContent=sD;
+  document.getElementById('sub-con').textContent=sC;
+  const bD=parseInt(document.getElementById('f-blanco-dip')?.value||0);
+  const bC=parseInt(document.getElementById('f-blanco-con')?.value||0);
+  const iD=parseInt(document.getElementById('f-imp-dip')?.value||0);
+  const iC=parseInt(document.getElementById('f-imp-con')?.value||0);
+  document.getElementById('gran-dip').textContent=sD+bD+iD;
+  document.getElementById('gran-con').textContent=sC+bC+iC;
+  validateTotals();
+}
+
+function validateTotals() {
+  const sobres=parseInt(document.getElementById('f-sobres')?.value||0);
+  const votaron=parseInt(document.getElementById('f-votaron')?.value||0);
+  const gran=parseInt(document.getElementById('gran-dip')?.textContent||0);
+  const difEl=document.getElementById('f-diferencia');
+  if(difEl) difEl.value=isNaN(votaron-sobres)?'':(votaron-sobres);
+  const wrap=document.getElementById('val-badge-wrap');
+  if(!wrap||!sobres){wrap.innerHTML='';return;}
+  if(gran===sobres) wrap.innerHTML='<span class="val-badge ok">✓ Cuadra</span>';
+  else if(gran>0) { const d=gran-sobres; wrap.innerHTML=`<span class="val-badge err">✗ Dif: ${d>0?'+':''}${d}</span>`; }
+  else wrap.innerHTML='';
+}
+
+// ── Submit mesa ───────────────────────────────────────────
+async function submitMesa() {
+  const mesa = document.getElementById('f-mesa').value.trim();
+  if(!mesa){showAlert('Ingresá el número de mesa.','error');return;}
+  const escSel = document.getElementById('f-escuela').value;
+  const escuela = escSel ? escSel.split('|')[0] : '';
+  const id = 'm'+mesa.padStart(4,'0');
+  const doc = {
+    mesa: mesa.padStart(4,'0'), escuela,
+    circuito: document.getElementById('f-circuito').value.trim().toUpperCase(),
+    fiscal: document.getElementById('f-fiscal').value.trim(),
+    votaron: parseInt(document.getElementById('f-votaron').value||0),
+    sobres: parseInt(document.getElementById('f-sobres').value||0),
+    votos: Object.fromEntries(PARTIDOS.map(p => [p.id, {
+      dip: p.dip ? parseInt(document.getElementById(`v-${p.id}-dip`)?.value||0) : null,
+      con: p.con ? parseInt(document.getElementById(`v-${p.id}-con`)?.value||0) : null,
+    }])),
+    blancoD: parseInt(document.getElementById('f-blanco-dip').value||0),
+    blancoC: parseInt(document.getElementById('f-blanco-con').value||0),
+    impD: parseInt(document.getElementById('f-imp-dip').value||0),
+    impC: parseInt(document.getElementById('f-imp-con').value||0),
+    ts: Date.now(),
+  };
+
+  mesasCache[id] = doc;
+  localStorage.setItem('_local_mesas', JSON.stringify(mesasCache));
+
+  if(navigator.onLine) {
+    try {
+      await apiPost(`/api/mesas/${id}`, doc);
+      showAlert(`✓ Mesa ${doc.mesa} guardada en el servidor.`,'ok');
+    } catch(e) {
+      pendingQueue.push({id, data:doc}); savePendingQueue();
+      showAlert(`Mesa ${doc.mesa} guardada localmente. Se enviará cuando haya red.`,'warn');
+    }
+  } else {
+    pendingQueue.push({id, data:doc}); savePendingQueue();
+    showAlert(`Mesa ${doc.mesa} guardada localmente (sin red).`,'warn');
+  }
+
+  updatePendingBadge();
+  clearForm();
+  renderResults(); renderMesas();
+}
+
+// ── Resultados ────────────────────────────────────────────
+function renderResults() {
+  const all = Object.values(mesasCache);
+  const n = all.length;
+  const totVotantes = all.reduce((s,m)=>s+(m.votaron||0),0);
+  document.getElementById('r-mesas').textContent = n;
+  document.getElementById('r-votantes').textContent = totVotantes;
+  if(totalMesas>0){
+    const pct=Math.round(n/totalMesas*100);
+    document.getElementById('r-pct').textContent=pct+'%';
+    document.getElementById('res-prog-card').style.display='block';
+    document.getElementById('res-mesa-count').textContent=`${n} / ${totalMesas}`;
+    document.getElementById('res-prog-bar').style.width=Math.min(pct,100)+'%';
+  }
+  const dipT={},conT={};let tD=0,tC=0,bD=0,bC=0,iD=0,iC=0;
+  PARTIDOS.forEach(p=>{dipT[p.id]=0;conT[p.id]=0;});
+  all.forEach(m=>{
+    if(!m.votos)return;
+    PARTIDOS.forEach(p=>{
+      if(p.dip&&m.votos[p.id]?.dip!=null){dipT[p.id]+=m.votos[p.id].dip;tD+=m.votos[p.id].dip;}
+      if(p.con&&m.votos[p.id]?.con!=null){conT[p.id]+=m.votos[p.id].con;tC+=m.votos[p.id].con;}
+    });
+    bD+=m.blancoD||0;bC+=m.blancoC||0;iD+=m.impD||0;iC+=m.impC||0;
+    tD+=(m.blancoD||0)+(m.impD||0);tC+=(m.blancoC||0)+(m.impC||0);
+  });
+  buildResTable('res-dip-table',PARTIDOS.filter(p=>p.dip),dipT,tD,bD,iD);
+  buildResTable('res-con-table',PARTIDOS.filter(p=>p.con),conT,tC,bC,iC);
+}
+
+function buildResTable(tid,parties,totals,grand,blanco,imp) {
+  const tbody=document.querySelector(`#${tid} tbody`);tbody.innerHTML='';
+  [...parties].sort((a,b)=>(totals[b.id]||0)-(totals[a.id]||0)).forEach((p,i)=>{
+    const v=totals[p.id]||0;const pct=grand>0?(v/grand*100).toFixed(1):'0.0';
+    const tr=document.createElement('tr');if(i===0&&v>0)tr.className='winner';
+    tr.innerHTML=`<td>${p.nombre}</td><td>${v.toLocaleString('es-AR')}</td><td class="pct">${pct}%</td>`;
+    tbody.appendChild(tr);
+  });
+  if(blanco>0){const tr=document.createElement('tr');tr.innerHTML=`<td>Votos en blanco</td><td>${blanco}</td><td class="pct">${grand>0?(blanco/grand*100).toFixed(1):'0.0'}%</td>`;tbody.appendChild(tr);}
+  if(imp>0){const tr=document.createElement('tr');tr.innerHTML<`<td>Impugnados</td><td>${imp}</td><td class="pct">${grand>0?(imp/grand*100).toFixed(1):'0.0'}%</td>`;tbody.appendChild(tr);}
+  const ft=document.createElement('tr');ft.className='footer-row';ft.innerHTML=`<td>TOTAL</td><td>${grand.toLocaleString('es-AR')}</td><td>100%</td>`;tbody.appendChild(ft);
+}
+
+// ── Mesas list ────────────────────────────────────────────
+function renderMesas() {
+  const cont=document.getElementById('mesas-list');
+  const all=Object.values(mesasCache).sort((a,b)=>(a.mesa||'').localeCompare(b.mesa||''));
+  if(all.length===0){
+    cont.innerHTML='<div class="empty-state"><div class="icon">📋</div><p>Todavía no hay actas cargadas.<br>Usá la pestaña <strong>Cargar</strong>.</p></div>';return;
+  }
+  cont.innerHTML=all.map(m=>`
+    <div class="mesa-card" onclick="loadMesaForm('${m.mesa}')">
+      <div><div class="mesa-num">Mesa ${m.mesa}</div><div class="mesa-info">${m.escuela||'Sin escuela'} &bull; Circ. ${m.circuito||'—'}</div></div>
+      <div class="mesa-meta"><div class="mesa-total">${m.sobres||0} votos</div><div class="mesa-fiscal">Fiscal: ${m.fiscal||'—'}</div></div>
+    </div>`).join('');
+}
+
+function loadMesaForm(mesaNum) {
+  const id='m'+mesaNum;
+  const m=mesasCache[id]||Object.values(mesasCache).find(x=>x.mesa===mesaNum);
+  if(!m)return;
+  showPage('cargar');
+  document.getElementById('f-mesa').value=parseInt(m.mesa)||'';
+  document.getElementById('f-circuito').value=m.circuito||'';
+  document.getElementById('f-fiscal').value=m.fiscal||'';
+  // Match escuela
+  const sel=document.getElementById('f-escuela');
+  let matched=false;
+  for(const opt of sel.options){if(opt.value.startsWith(m.escuela+'|')){sel.value=opt.value;matched=true;break;}}
+  if(!matched) sel.value='';
+  document.getElementById('f-votaron').value=m.votaron||0;
+  document.getElementById('f-sobres').value=m.sobres||0;
+  document.getElementById('f-blanco-dip').value=m.blancoD||0;
+  document.getElementById('f-blanco-con').value=m.blancoC||0;
+  document.getElementById('f-imp-dip').value=m.impD||0;
+  document.getElementById('f-imp-con').value=m.impC||0;
+  PARTIDOS.forEach(p=>{
+    if(p.dip&&m.votos?.[p.id]?.dip!=null){const el=document.getElementById(`v-${p.id}-dip`);if(el)el.value=m.votos[p.id].dip;}
+    if(p.con&&m.votos?.[p.id]?.con!=null){const el=document.getElementById(`v-${p.id}-con`);if(el)el.value=m.votos[p.id].con;}
+  });
+  recalcTotals();
+}
+
+// ── Admin ─────────────────────────────────────────────────
+function buildAdminList() {
+  const cont=document.getElementById('party-list');
+  cont.innerHTML=PARTIDOS.map((p,i)=>`
+    <div class="party-row" id="pr-${i}">
+      <input type="text" value="${p.nombre}" id="pn-${i}" style="font-size:12px">
+      <div class="chk-wrap">
+        <label><input type="checkbox" id="pd-${i}" ${p.dip?'checked':''}> Dip</label>
+        <label><input type="checkbox" id="pc-${i}" ${p.con?'checked':''}> Con</label>
+      </div>
+      <button class="del-btn" onclick="removeParty(${i})">✕</button>
+    </div>`).join('');
+}
+function addParty(){PARTIDOS.push({id:'new'+Date.now(),nombre:'Nuevo Partido',dip:true,con:true});buildAdminList();}
+function removeParty(i){PARTIDOS.splice(i,1);buildAdminList();}
+
+async function saveParties() {
+  const newList=PARTIDOS.map((p,i)=>({
+    id:p.id,nombre:document.getElementById(`pn-${i}`)?.value||p.nombre,
+    dip:document.getElementById(`pd-${i}`)?.checked??p.dip,
+    con:document.getElementById(`pc-${i}`)?.checked??p.con
+  }));
+  PARTIDOS=newList;buildVoteTable();buildAdminList();
+  try{await apiPost('/api/config/parties',PARTIDOS);alert('Lista guardada.');}
+  catch(e){alert('Guardado localmente (sin red).');}
+}
+
+async function saveCfg() {
+  totalMesas=parseInt(document.getElementById('cfg-total-mesas').value||0);
+  try{await apiPost('/api/config/settings',{totalMesas});alert('Configuración guardada.');}
+  catch(e){}
+  renderResults();
+}
+
+async function resetAll() {
+  if(!confirm('¿Borrar TODOS los datos?'))return;
+  const secret=document.getElementById('admin-secret').value||'peron2027';
+  try{
+    await apiDel(`/api/mesas?secret=${secret}`);
+    mesasCache={};localStorage.removeItem('_local_mesas');
+    pendingQueue=[];savePendingQueue();updatePendingBadge();
+    renderResults();renderMesas();
+    alert('Datos borrados.');
+  }catch(e){alert('Error: '+e.message+' — verificá la contraseña.');}
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function onEscuelaChange(){
+  const val=document.getElementById('f-escuela').value;
+  if(!val)return;
+  const[,circuito,desde,hasta]=val.split('|');
+  document.getElementById('f-circuito').value=circuito;
+  showAlert(`Mesas ${desde} a ${hasta}. Completá el N° exacto.`,'warn');
+}
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='resultados')renderResults();
+  if(name==='mesas'){loadMesas();renderMesas();}
+}
+
+function showAlert(msg,type){
+  const el=document.getElementById('form-alert');
+  el.innerHTML<`<div class="alert ${type}"><span class="alert-icon">${type==='ok'?'✓':'⚠'}</span>${msg}</div>`;
+  setTimeout(()=>{el.innerHTML='';},4000);
+}
+
+function clearForm(){
+  ['f-mesa','f-circuito','f-fiscal','f-votaron','f-sobres','f-blanco-dip','f-blanco-con','f-imp-dip','f-imp-con'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-escuela').value='';
+  PARTIDOS.forEach(p=>{
+    if(p.dip){const el=document.getElementById(`v-${p.id}-dip`);if(el)el.value='';}
+    if(p.con){const el=document.getElementById(`v-${p.id}-con`);if(el)el.value='';}
+  });
+  ['sub-dip','sub-con','gran-dip','gran-con'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='0';});
+  document.getElementById('val-badge-wrap').innerHTML='';
+}
+
+function loadLocalForm(){
+  try{const n=localStorage.getItem('esc_fiscal');if(n)document.getElementById('f-fiscal').value=n;}catch(e){}
+}
+document.getElementById('f-fiscal').addEventListener('change',function(){try{localStorage.setItem('esc_fiscal',this.value);}catch(e){}});
+
+// ── Start ─────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
