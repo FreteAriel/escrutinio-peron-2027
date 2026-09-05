@@ -9,8 +9,15 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ─── Arrancar servidor PRIMERO (Railway health check) ─────────────────────────
+app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+
 // ─── DB Setup ────────────────────────────────────────────────────────────────
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  connectionTimeoutMillis: 5000
+});
 
 async function initDB() {
   const client = await pool.connect();
@@ -31,6 +38,8 @@ async function initDB() {
     client.release();
   }
 }
+
+initDB().catch(err => console.error('DB Error:', err.message));
 
 // ─── API: Mesas ───────────────────────────────────────────────────────────────
 app.get('/api/mesas', async (req, res) => {
@@ -79,9 +88,7 @@ app.get('/api/config/parties', async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT value FROM config WHERE key='parties'");
     res.json(rows[0]?.value ?? []);
-  } catch (e) {
-    res.json([]);
-  }
+  } catch (e) { res.json([]); }
 });
 
 app.post('/api/config/parties', async (req, res) => {
@@ -91,18 +98,14 @@ app.post('/api/config/parties', async (req, res) => {
       [JSON.stringify(req.body)]
     );
     res.json({ ok: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/config/settings', async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT value FROM config WHERE key='settings'");
     res.json(rows[0]?.value ?? {});
-  } catch (e) {
-    res.json({});
-  }
+  } catch (e) { res.json({}); }
 });
 
 app.post('/api/config/settings', async (req, res) => {
@@ -112,9 +115,7 @@ app.post('/api/config/settings', async (req, res) => {
       [JSON.stringify(req.body)]
     );
     res.json({ ok: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ─── Health ───────────────────────────────────────────────────────────────────
@@ -124,14 +125,3 @@ app.get('/health', (req, res) => res.json({ ok: true }));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
-// ─── Start ───────────────────────────────────────────────────────────────────
-initDB()
-  .then(() => {
-    app.listen(PORT, () => console.log(`Servidor escuchando en puerto ${PORT}`));
-  })
-  .catch(err => {
-    console.error('Error iniciando DB:', err.message);
-    // Iniciar igual sin DB para que Railway no marque 502
-    app.listen(PORT, () => console.log(`Servidor sin DB en puerto ${PORT}`));
-  });
